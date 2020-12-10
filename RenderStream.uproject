@@ -1,0 +1,16 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{B541F84D-441B-43FC-AFBF-E98182268CC6}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "RenderStream",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	]
+}
