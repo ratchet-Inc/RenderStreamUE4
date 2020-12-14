@@ -6,9 +6,16 @@
 #include "GameFramework/GameModeBase.h"
 #include "Engine/GameEngine.h"
 #include "FrameGrabber.h"
+#include "EncoderThread.h"
+#include "toojpeg.h"
 #include "RenderStreamGameModeBase.generated.h"
 
-class TooJpeg_Controller;
+struct EncoderThreadStructure {
+	EncoderThread* enc = nullptr;
+	FRunnableThread* thr = nullptr;
+	explicit EncoderThreadStructure(EncoderThread* enc_, FRunnableThread* thr_) : enc(enc_), thr(thr_) {
+	}
+};
 
 /**
  * 
@@ -22,17 +29,21 @@ public:
 	// frames per second cap
 	static const uint8_t FPS_LIMIT = 24;
 	// frame time in milliseconds
-	static const uint8_t F_TIME_MS = 41;
+	static const uint8_t F_TIME_MS = 42;
+	// JPEG compression quality
+	static const uint8_t COMP_QUALITY = 60;
 
 	ARenderStreamGameModeBase();
+	virtual bool GetInitState(void);
+	virtual uint8_t* ConvertFrame(TArray<FColor>& arr, unsigned int &len);
 protected:
 	virtual void BeginPlay(void) override;
 private:
+	bool startInit = false;
 	uint8_t threadLimit = 1;
-	FRunnableThread* Threads = nullptr;
+	TArray<EncoderThreadStructure> *Threads = nullptr;
 	FCriticalSection mutex;
-	TSharedPtr<FSceneViewport>* scene_viewport;
-	TSharedRef<FSceneViewport>* sceneRef;
+	TSharedPtr<FSceneViewport> scene_viewport;
 	FFrameGrabber* capturePtr = nullptr;
 	TArray<FFramePayloadPtr>* FramePayloadList = nullptr;
 	AActor* streamActorPtr = nullptr;
@@ -40,4 +51,6 @@ private:
 	virtual void InitFrameGrabber(void);
 	virtual void GrabCurrentFrame(void);
 	virtual void DetermineThreads(void);
+	virtual void ReleaseFrameGrabber(void);
+	virtual void CreateEncoders(void);
 };

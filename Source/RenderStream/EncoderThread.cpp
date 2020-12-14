@@ -10,3 +10,17 @@ EncoderThread::EncoderThread()
 EncoderThread::~EncoderThread()
 {
 }
+
+bool EncoderThread::Init(void)
+{
+	return false;
+}
+
+uint32 EncoderThread::Run(void)
+{
+	return 0;
+}
+
+void EncoderThread::Stop(void)
+{
+}
