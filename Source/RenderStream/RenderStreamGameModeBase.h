@@ -36,6 +36,11 @@ public:
 	ARenderStreamGameModeBase();
 	virtual bool GetInitState(void);
 	virtual uint8_t* ConvertFrame(TArray<FColor>& arr, unsigned int &len);
+	virtual void ThreadOutPut(FString* msg) {
+		mutex.Lock();
+		UE_LOG(LogTemp, Warning, TEXT("%s"), msg);
+		mutex.Unlock();
+	}
 protected:
 	virtual void BeginPlay(void) override;
 private:

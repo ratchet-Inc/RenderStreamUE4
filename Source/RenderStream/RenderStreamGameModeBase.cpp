@@ -8,15 +8,15 @@
 #include "time.h"
 #include "StreamActor.h"
 #include "FrameGrabber.h"
+//#include "toojpeg.cpp"
 #if WITH_EDITOR
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 #include "IAssetViewport.h"
 #endif
 
-ARenderStreamGameModeBase::ARenderStreamGameModeBase(void)
+ARenderStreamGameModeBase::ARenderStreamGameModeBase(void) : Super()
 {
-	Super();
 	this->FramePayloadList = new TArray<FFramePayloadPtr>();
 }
 
@@ -94,7 +94,7 @@ void ARenderStreamGameModeBase::GrabCurrentFrame(void)
 
 void ARenderStreamGameModeBase::DetermineThreads(void)
 {
-	/*if (this->capturePtr == nullptr) {
+	if (this->capturePtr == nullptr) {
 		UE_LOG(LogTemp, Warning, TEXT("*Frame Grabber is null."));
 		return;
 	}
@@ -125,7 +125,7 @@ void ARenderStreamGameModeBase::DetermineThreads(void)
 	UE_LOG(LogTemp, Warning, TEXT("Estimated conversion time: %.6f."), timeTaken);
 	uint8_t coreCount = timeTaken / ARenderStreamGameModeBase::F_TIME_MS;
 	coreCount++;
-	this->threadLimit = coreCount;*/
+	this->threadLimit = coreCount;
 }
 
 void ARenderStreamGameModeBase::ReleaseFrameGrabber(void)

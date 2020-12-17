@@ -53,13 +53,30 @@ void AStreamActor::CaptureFrame(void)
 	UE_LOG(LogTemp, Warning, TEXT("Captured frames: %d."), l);
 	if (l > 0) {
 		FCapturedFrameData &frame = frames[l - 1];
-		FrameProcessData d(this->frameCounter, false, 0, nullptr, nullptr);
+		FrameProcessData d(this->frameCounter, false, 0, 0, 0, nullptr, nullptr);
 		if (this->FrameMap == nullptr || this->frameQueue == nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("*Frame Queue or Frame Map is null."));
 			return;
 		}
+		d.width = frame.BufferSize.X;
+		d.height = frame.BufferSize.Y;
+		d.frame = &frame;
 		this->FrameMap->Add(this->frameCounter, &d);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
 	}
+}
+
+uint64_t AStreamActor::FetchQueueData(FrameProcessData* memory)
+{
+	if (this->frameQueue != nullptr && !this->frameQueue->IsEmpty()) {
+		unsigned long long val = 0;
+		bool res = this->frameQueue->Dequeue(val);
+		if (res == false) {
+			return 0;
+		}
+		memory = *(this->FrameMap->Find(val));
+		return val;
+	}
+	return 0;
 }

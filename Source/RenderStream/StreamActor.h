@@ -12,13 +12,18 @@
 struct FrameProcessData {
 	uint64_t f_id;
 	bool isReady;
+	unsigned short width;
+	unsigned short height;
 	unsigned int arrLen;
 	uint8_t* arrRGB = nullptr;
 	uint8_t* encoded = nullptr;
+	FCapturedFrameData* frame = nullptr;
 	explicit FrameProcessData(
-		uint64_t id, bool r, UINT len,
-		uint8_t* arr, uint8_t* en
+		uint64_t id, bool r, uint16_t w, uint16_t h,
+		UINT len, uint8_t* arr, uint8_t* en
 	) : f_id(id), isReady(r), arrLen(len), arrRGB(arr), encoded(en) {
+		width = w;
+		height = h;
 	}
 };
 
@@ -39,6 +44,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetFrameGrabber(FFrameGrabber* pointer);
+	virtual uint64_t FetchQueueData(FrameProcessData* memory);
+	virtual AGameModeBase* GetGameMode(void) { return this->gameMode;  }
 private:
 	TMap<uint64_t, FrameProcessData*>* FrameMap = nullptr;
 	TQueue<uint64_t>* frameQueue = nullptr;
