@@ -7,7 +7,7 @@
 #include "Engine/GameEngine.h"
 #include "FrameGrabber.h"
 #include "EncoderThread.h"
-#include "toojpeg.h"
+#include "Includes/toojpeg.h"
 #include "RenderStreamGameModeBase.generated.h"
 
 struct EncoderThreadStructure {
@@ -41,6 +41,7 @@ public:
 		UE_LOG(LogTemp, Warning, TEXT("%s"), msg);
 		mutex.Unlock();
 	}
+	virtual void ReleaseFrameGrabber(void);
 protected:
 	virtual void BeginPlay(void) override;
 private:
@@ -56,6 +57,5 @@ private:
 	virtual void InitFrameGrabber(void);
 	virtual void GrabCurrentFrame(void);
 	virtual void DetermineThreads(void);
-	virtual void ReleaseFrameGrabber(void);
 	virtual void CreateEncoders(void);
 };

@@ -27,6 +27,9 @@ void AStreamActor::BeginPlay()
 {
 	Super::BeginPlay();
 	this->gameMode = UGameplayStatics::GetGameMode(GetWorld());
+#ifdef UE_BUILD_DEBUG
+	UE_LOG(LogTemp, Warning, TEXT("Stream Actor spawned."));
+#endif
 }
 
 // Called every frame
@@ -35,7 +38,8 @@ void AStreamActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	bool ready = ((ARenderStreamGameModeBase*)this->gameMode)->GetInitState();
 	if (ready && this->captureObj != nullptr) {
-		this->CaptureFrame();
+		UE_LOG(LogTemp, Warning, TEXT("Capture"));
+		//this->CaptureFrame();
 	}
 }
 
@@ -65,6 +69,18 @@ void AStreamActor::CaptureFrame(void)
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
 	}
+}
+
+void AStreamActor::BeginDestroy(void)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Destroy."));
+	if (this->gameMode != nullptr) {
+		((ARenderStreamGameModeBase*)this->gameMode)->ReleaseFrameGrabber();
+#ifdef UE_BUILD_DEBUG
+		UE_LOG(LogTemp, Warning, TEXT("released frame grabber."));
+#endif
+	}
+	Super::BeginDestroy();
 }
 
 uint64_t AStreamActor::FetchQueueData(FrameProcessData* memory)

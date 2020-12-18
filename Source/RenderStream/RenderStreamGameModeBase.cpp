@@ -31,7 +31,8 @@ void ARenderStreamGameModeBase::BeginPlay(void)
 
 bool ARenderStreamGameModeBase::GetInitState(void)
 {
-	return this->startInit;
+	this->startInit = false;
+	return !this->startInit;
 }
 
 uint8_t* ARenderStreamGameModeBase::ConvertFrame(TArray<FColor>& arr, unsigned int &len)
@@ -50,36 +51,50 @@ uint8_t* ARenderStreamGameModeBase::ConvertFrame(TArray<FColor>& arr, unsigned i
 
 void ARenderStreamGameModeBase::InitStream(void)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Key pressed."));
+#ifdef UE_BUILD_DEBUG
+	UE_LOG(LogTemp, Warning, TEXT("Manually starting stream."));
+#endif
 	this->startInit = true;
+	this->InitFrameGrabber();
+	if (this->streamActorPtr == nullptr) {
+		UE_LOG(LogTemp, Error, TEXT("*Failed to spawn stream actor."));
+		return;
+	}
+	((AStreamActor*)this->streamActorPtr)->SetFrameGrabber(this->capturePtr);
 }
 
 void ARenderStreamGameModeBase::InitFrameGrabber(void)
 {
+	TSharedPtr<FSceneViewport> sceneVP;
 	if (this->capturePtr == nullptr) {
 #if WITH_EDITOR
 		if (GIsEditor) {
-			for (const FWorldContext &Context : GEngine->GetWorldContexts()) {
+			for (const FWorldContext& Context : GEngine->GetWorldContexts()) {
 				if (Context.WorldType == EWorldType::PIE) {
 					FSlatePlayInEditorInfo* sess = GEditor->SlatePlayInEditorMap.Find(Context.ContextHandle);
 					if (sess && sess->DestinationSlateViewport.IsValid()) {
 						TSharedPtr<IAssetViewport> destVP = sess->DestinationSlateViewport.Pin();
-						this->scene_viewport = destVP.Get()->GetSharedActiveViewport();
-						break;
+						sceneVP = destVP.Get()->GetSharedActiveViewport();
 					}
 					if (sess && sess->SlatePlayInEditorWindowViewport.IsValid()) {
-						this->scene_viewport = sess->SlatePlayInEditorWindowViewport;
+						sceneVP = sess->SlatePlayInEditorWindowViewport;
+					}
+					if (/*this->scene_viewport.IsValid()*/sceneVP.IsValid()) {
 						break;
 					}
 				}
 			}
 		}
-		else {
-#endif
+#else
+		{
 			UGameEngine* en = Cast<UGameEngine>(GEngine);
 			this->scene_viewport = en->SceneViewport;
 		}
-		this->capturePtr = new(std::nothrow) FFrameGrabber(this->scene_viewport.ToSharedRef(), this->scene_viewport.Get()->GetSize());
+#endif
+		// cannot save viewport in class instance, UE will assert on exit.
+		// need to find a way to void the refernce pointer or decrease count.
+		//this->scene_viewport = MakeShared<FSceneViewport>(sceneVP);
+		this->capturePtr = new(std::nothrow) FFrameGrabber(sceneVP.ToSharedRef(), sceneVP.Get()->GetSize());
 		if (this->capturePtr == nullptr) {
 			UE_LOG(LogTemp, Error, TEXT("*Failed to create screen capture object."));
 			return;
@@ -132,6 +147,8 @@ void ARenderStreamGameModeBase::ReleaseFrameGrabber(void)
 {
 	if (this->capturePtr != nullptr) {
 		this->capturePtr->StopCapturingFrames();
+		this->capturePtr->Shutdown();
+		this->scene_viewport.Reset();
 		delete this->capturePtr;
 	}
 }

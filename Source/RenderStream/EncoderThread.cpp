@@ -29,12 +29,16 @@ bool EncoderThread::Init(void)
 
 uint32 EncoderThread::Run(void)
 {
+	if (this->forceStop) {
+		return 0;
+	}
 	if (this->stream == nullptr || this->encoder == nullptr) {
 		return 1;
 	}
 	FrameProcessData* ptr = nullptr;
 	unsigned long long frameID = this->stream->FetchQueueData(ptr);
 	if (frameID == 0 || ptr == nullptr) {
+		FPlatformProcess::Sleep(ARenderStreamGameModeBase::FPS_LIMIT / 1000);
 		return 1;
 	}
 	ARenderStreamGameModeBase* gm = (ARenderStreamGameModeBase*)this->stream->GetGameMode();

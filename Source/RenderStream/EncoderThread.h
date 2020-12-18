@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "StreamActor.h"
-#include "toojpeg.h"
+#include "Includes/toojpeg.h"
 
 /**
  * 
@@ -20,7 +20,7 @@ public:
 		this->thread_id = threadID;
 		this->stream = p;
 	};
-	virtual void ForceStop(void) { this->forceStop = true; };
+	virtual void ForceStop(void) { this->forceStop = true; this->Stop(); };
 
 	// interface
 	virtual bool Init(void);

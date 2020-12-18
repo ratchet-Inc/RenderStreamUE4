@@ -38,7 +38,9 @@ public:
 
 protected:
 	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void BeginPlay(void) override;
+	virtual void BeginDestroy(void) override;
+	//virtual void Destory(void) override;
 
 public:	
 	// Called every frame
