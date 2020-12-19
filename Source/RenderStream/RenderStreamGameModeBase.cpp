@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "time.h"
 #include "StreamActor.h"
+#include "GameModeActor.h"
 #include "FrameGrabber.h"
 //#include "toojpeg.cpp"
 #if WITH_EDITOR
@@ -23,6 +24,7 @@ ARenderStreamGameModeBase::ARenderStreamGameModeBase(void) : Super()
 void ARenderStreamGameModeBase::BeginPlay(void)
 {
 	this->streamActorPtr = GetWorld()->SpawnActor<AStreamActor>();
+	this->tickObj = GetWorld()->SpawnActor<AGameModeActor>();
 	UWorld* cWorld = GetWorld();
 	APlayerController* pController = UGameplayStatics::GetPlayerController(cWorld, 0);
 	UInputComponent* cInput = pController->InputComponent;
@@ -31,8 +33,9 @@ void ARenderStreamGameModeBase::BeginPlay(void)
 
 bool ARenderStreamGameModeBase::GetInitState(void)
 {
+	bool val = this->startInit;
 	this->startInit = false;
-	return !this->startInit;
+	return val;
 }
 
 uint8_t* ARenderStreamGameModeBase::ConvertFrame(TArray<FColor>& arr, unsigned int &len)
@@ -60,7 +63,10 @@ void ARenderStreamGameModeBase::InitStream(void)
 		UE_LOG(LogTemp, Error, TEXT("*Failed to spawn stream actor."));
 		return;
 	}
+	this->DetermineThreads();
 	((AStreamActor*)this->streamActorPtr)->SetFrameGrabber(this->capturePtr);
+
+	return;
 }
 
 void ARenderStreamGameModeBase::InitFrameGrabber(void)
@@ -107,18 +113,18 @@ void ARenderStreamGameModeBase::GrabCurrentFrame(void)
 {
 }
 
-void ARenderStreamGameModeBase::DetermineThreads(void)
+int ARenderStreamGameModeBase::DetermineThreads(void)
 {
 	if (this->capturePtr == nullptr) {
 		UE_LOG(LogTemp, Warning, TEXT("*Frame Grabber is null."));
-		return;
+		return 1;
 	}
 	FFramePayloadPtr payl;
 	this->capturePtr->CaptureThisFrame(payl);
 	TArray<FCapturedFrameData> frameData = this->capturePtr->GetCapturedFrames();
 	if (frameData.Num() < 1) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to get any rendered frames."));
-		return;
+		return 1;
 	}
 	FCapturedFrameData& data = frameData.Last();
 	unsigned int memLen = 0;
@@ -126,7 +132,7 @@ void ARenderStreamGameModeBase::DetermineThreads(void)
 	TooJPEG_Controller* contr = new(std::nothrow) TooJPEG_Controller();
 	if (contr == nullptr) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to construct the jpeg controller."));
-		return;
+		return 1;
 	}
 	int frameWidth = data.BufferSize.X;
 	int frameHeight = data.BufferSize.Y;
@@ -141,6 +147,9 @@ void ARenderStreamGameModeBase::DetermineThreads(void)
 	uint8_t coreCount = timeTaken / ARenderStreamGameModeBase::F_TIME_MS;
 	coreCount++;
 	this->threadLimit = coreCount;
+	UE_LOG(LogTemp, Warning, TEXT("Encoder threads(determined): %d."), coreCount);
+
+	return 0;
 }
 
 void ARenderStreamGameModeBase::ReleaseFrameGrabber(void)

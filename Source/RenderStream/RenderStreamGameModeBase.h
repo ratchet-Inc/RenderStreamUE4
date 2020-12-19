@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Engine/GameEngine.h"
+#include "GameModeActor.h"
 #include "FrameGrabber.h"
 #include "EncoderThread.h"
 #include "Includes/toojpeg.h"
@@ -42,6 +43,7 @@ public:
 		mutex.Unlock();
 	}
 	virtual void ReleaseFrameGrabber(void);
+	virtual void InitStream(void);
 protected:
 	virtual void BeginPlay(void) override;
 private:
@@ -53,9 +55,9 @@ private:
 	FFrameGrabber* capturePtr = nullptr;
 	TArray<FFramePayloadPtr>* FramePayloadList = nullptr;
 	AActor* streamActorPtr = nullptr;
-	virtual void InitStream(void);
+	AActor* tickObj = nullptr;
 	virtual void InitFrameGrabber(void);
 	virtual void GrabCurrentFrame(void);
-	virtual void DetermineThreads(void);
+	virtual int DetermineThreads(void);
 	virtual void CreateEncoders(void);
 };
