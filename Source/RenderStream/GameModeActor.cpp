@@ -2,6 +2,7 @@
 
 
 #include "GameModeActor.h"
+#include "RenderStreamGameModeBase.h"
 
 // Sets default values
 AGameModeActor::AGameModeActor()
@@ -18,11 +19,42 @@ void AGameModeActor::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("auto init value: %d."), this->autoInit);
 }
 
+void AGameModeActor::BeginDestroy(void)
+{
+	if (ptr != NULL) {
+		((ARenderStreamGameModeBase*)ptr)->ReleaseEncoders();
+	}
+	Super::BeginDestroy();
+}
+
 // Called every frame
 void AGameModeActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	int res = 1;
+	if (!isDone && ptr != nullptr) {
+		switch (state) {
+		case 0:
+			((ARenderStreamGameModeBase*)ptr)->InitStream();
+			state = 1;
+			break;
+		case 1:
+			UE_LOG(LogTemp, Warning, TEXT("ticking."));
+			res = ((ARenderStreamGameModeBase*)ptr)->DetermineThreads();
+			if (res == -1) {
+				isDone = true;
+			}
+			else if (res == 0) {
+				state = 2;
+			}
+			break;
+		case 2:
+			UE_LOG(LogTemp, Warning, TEXT("started."));
+			((ARenderStreamGameModeBase*)ptr)->StartStream();
+			isDone = true;
+			break;
+		}
+	}
 }
 
 void AGameModeActor::SetGameMode(AGameModeBase* pointer)

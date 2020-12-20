@@ -17,11 +17,15 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetGameMode(AGameModeBase* pointer);
+	virtual int GetAutoInit(void) { return this->autoInit; }
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void BeginDestroy(void) override;
 private:
 	UPROPERTY(Config)
 		int autoInit;
 	AGameModeBase* ptr = nullptr;
+	bool isDone = false;
+	int state = 0;
 };

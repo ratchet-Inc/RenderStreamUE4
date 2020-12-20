@@ -25,6 +25,9 @@ void ARenderStreamGameModeBase::BeginPlay(void)
 {
 	this->streamActorPtr = GetWorld()->SpawnActor<AStreamActor>();
 	this->tickObj = GetWorld()->SpawnActor<AGameModeActor>();
+	if (this->tickObj != nullptr) {
+		((AGameModeActor*)this->tickObj)->SetGameMode((AGameModeBase*)this);
+	}
 	UWorld* cWorld = GetWorld();
 	APlayerController* pController = UGameplayStatics::GetPlayerController(cWorld, 0);
 	UInputComponent* cInput = pController->InputComponent;
@@ -57,7 +60,7 @@ void ARenderStreamGameModeBase::InitStream(void)
 #ifdef UE_BUILD_DEBUG
 	UE_LOG(LogTemp, Warning, TEXT("Manually starting stream."));
 #endif
-	this->startInit = true;
+	//this->startInit = true;
 	this->InitFrameGrabber();
 	if (this->streamActorPtr == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("*Failed to spawn stream actor."));
@@ -148,8 +151,22 @@ int ARenderStreamGameModeBase::DetermineThreads(void)
 	coreCount++;
 	this->threadLimit = coreCount;
 	UE_LOG(LogTemp, Warning, TEXT("Encoder threads(determined): %d."), coreCount);
+	int r = this->CreateEncoders();
+	if (r != 0) {
+		r = -1;
+	}
+	return r;
+}
 
-	return 0;
+void ARenderStreamGameModeBase::ReleaseEncoders(void)
+{
+	if (this->Threads != nullptr) {
+		EncoderThreadStructure* p = this->Threads->GetData();
+		for (int i = 0; i < this->Threads->Num(); ++i) {
+			delete p[i].thr;
+			delete p[i].enc;
+		}
+	}
 }
 
 void ARenderStreamGameModeBase::ReleaseFrameGrabber(void)
@@ -162,23 +179,27 @@ void ARenderStreamGameModeBase::ReleaseFrameGrabber(void)
 	}
 }
 
-void ARenderStreamGameModeBase::CreateEncoders(void)
+int ARenderStreamGameModeBase::CreateEncoders(void)
 {
 	this->Threads = new(std::nothrow) TArray<EncoderThreadStructure>();
 	if (this->Threads == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("*Failed to create encoding threads vector[%d]."), this->threadLimit);
-		return;
+		return 1;
 	}
 	for (int i = 0; i < this->threadLimit; ++i) {
 		EncoderThread* ptr = new(std::nothrow) EncoderThread();
 		if (ptr == nullptr) {
 			UE_LOG(LogTemp, Error, TEXT("*Failed to create an encoder."));
-			return;
+			return 1;
 		}
+		ptr->SetDetails(i, (AStreamActor*)this->streamActorPtr);
 		EncoderThreadStructure s(
 			ptr,
 			FRunnableThread::Create(ptr, TEXT("a JPEG encoder thread."))
 		);
 		this->Threads->Add(s);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Threads created."));
+
+	return 0;
 }

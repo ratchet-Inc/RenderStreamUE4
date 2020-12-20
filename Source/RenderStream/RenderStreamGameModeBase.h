@@ -21,7 +21,7 @@ struct EncoderThreadStructure {
 /**
  * 
  */
-UCLASS()
+UCLASS(Config=Game)
 class RENDERSTREAM_API ARenderStreamGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
@@ -37,18 +37,22 @@ public:
 	ARenderStreamGameModeBase();
 	virtual bool GetInitState(void);
 	virtual uint8_t* ConvertFrame(TArray<FColor>& arr, unsigned int &len);
-	virtual void ThreadOutPut(FString* msg) {
+	virtual void ThreadOutPut(FString msg) {
 		mutex.Lock();
-		UE_LOG(LogTemp, Warning, TEXT("%s"), msg);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
 		mutex.Unlock();
 	}
 	virtual void ReleaseFrameGrabber(void);
 	virtual void InitStream(void);
+	virtual void StartStream(void) { this->startInit; }
+	virtual int DetermineThreads(void);
+	virtual void ReleaseEncoders(void);
 protected:
 	virtual void BeginPlay(void) override;
 private:
 	bool startInit = false;
-	uint8_t threadLimit = 1;
+	UPROPERTY(Config)
+	int threadLimit = 1;
 	TArray<EncoderThreadStructure> *Threads = nullptr;
 	FCriticalSection mutex;
 	TSharedPtr<FSceneViewport> scene_viewport;
@@ -58,6 +62,5 @@ private:
 	AActor* tickObj = nullptr;
 	virtual void InitFrameGrabber(void);
 	virtual void GrabCurrentFrame(void);
-	virtual int DetermineThreads(void);
-	virtual void CreateEncoders(void);
+	virtual int CreateEncoders(void);
 };
