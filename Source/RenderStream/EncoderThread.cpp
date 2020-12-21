@@ -55,6 +55,7 @@ uint32 EncoderThread::Run(void)
 			FString s("Failed to encode frame.");
 			gm->ThreadOutPut(s);
 		}
+		ptr->encoded = this->encoder->GetEncoded(ptr->arrLen);
 		FPlatformProcess::Sleep(0.03f);
 	}
 

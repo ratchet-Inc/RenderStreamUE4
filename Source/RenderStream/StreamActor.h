@@ -7,6 +7,7 @@
 #include "FrameGrabber.h"
 #include "Containers/Map.h"
 #include "Containers/Queue.h"
+#include "Sockets.h"
 #include "StreamActor.generated.h"
 
 struct FrameProcessData {
@@ -41,6 +42,7 @@ protected:
 	virtual void BeginPlay(void) override;
 	virtual void BeginDestroy(void) override;
 	//virtual void Destory(void) override;
+	virtual void ConnectToServer(void);
 
 public:	
 	// Called every frame
@@ -54,6 +56,12 @@ private:
 	AGameModeBase* gameMode = nullptr;
 	FFrameGrabber* captureObj = nullptr;
 	uint64_t frameCounter = 0;
-	uint64_t curframeCount = 0;
-	virtual void CaptureFrame(void);
+	uint64_t curSendCount = 0;
+	TSharedPtr<FInternetAddr> sharedRefAddr;
+	FSocket* socket = nullptr;
+	bool IsConnected = false;
+	void CaptureFrame(void);
+	void SendFrame(void);
+	// legacy encoding, could still be useful
+	char* ParseFrameFAST(const FCapturedFrameData* data, int& bufferSize, const int lossyInterval);
 };
