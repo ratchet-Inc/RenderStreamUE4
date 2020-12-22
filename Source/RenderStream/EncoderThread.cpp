@@ -39,23 +39,28 @@ uint32 EncoderThread::Run(void)
 			UE_LOG(LogTemp, Error, TEXT("thread failure."));
 			return 1;
 		}
-		ARenderStreamGameModeBase* gm = (ARenderStreamGameModeBase*)this->stream->GetGameMode();
-		FString m("thread running.");
-		gm->ThreadOutPut(m);
-		FrameProcessData* ptr = nullptr;
-		unsigned long long frameID = this->stream->FetchQueueData(ptr);
-		if (frameID == 0 || ptr == nullptr) {
-			FPlatformProcess::Sleep(0.03f);
-			continue;
+		unsigned int x = 0;
+		this->encoder->GetEncoded(x);
+		// checking if the stream buffer was emptied by the main thread.
+		if (x == 0) {
+			ARenderStreamGameModeBase* gm = (ARenderStreamGameModeBase*)this->stream->GetGameMode();
+			/*FString m("thread running.");
+			gm->ThreadOutPut(m);*/
+			FrameProcessData* ptr = nullptr;
+			unsigned long long frameID = this->stream->FetchQueueData(ptr);
+			if (frameID == 0 || ptr == nullptr) {
+				FPlatformProcess::Sleep(0.03f);
+				continue;
+			}
+			ptr->arrRGB = gm->ConvertFrame(ptr->frame->ColorBuffer, ptr->arrLen);
+			bool res = this->encoder->EncodeImage(ptr->arrRGB, ptr->width, ptr->height, true, ARenderStreamGameModeBase::COMP_QUALITY);
+			ptr->isReady = res;
+			if (!res) {
+				FString s("Failed to encode frame.");
+				gm->ThreadOutPut(s);
+			}
+			ptr->encoded = this->encoder->GetEncoded(ptr->arrLen);
 		}
-		ptr->arrRGB = gm->ConvertFrame(ptr->frame->ColorBuffer, ptr->arrLen);
-		bool res = this->encoder->EncodeImage(ptr->arrRGB, ptr->width, ptr->height, true, ARenderStreamGameModeBase::COMP_QUALITY);
-		ptr->isReady = res;
-		if (!res) {
-			FString s("Failed to encode frame.");
-			gm->ThreadOutPut(s);
-		}
-		ptr->encoded = this->encoder->GetEncoded(ptr->arrLen);
 		FPlatformProcess::Sleep(0.03f);
 	}
 
