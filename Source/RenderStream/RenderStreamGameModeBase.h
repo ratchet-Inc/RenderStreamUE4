@@ -44,7 +44,7 @@ public:
 	}
 	virtual void ReleaseFrameGrabber(void);
 	virtual void InitStream(void);
-	virtual void StartStream(void) { this->startInit; }
+	virtual void StartStream(void) { this->startInit = true; }
 	virtual int DetermineThreads(void);
 	virtual void ReleaseEncoders(void);
 protected:
