@@ -18,8 +18,9 @@ struct FrameProcessData {
 	unsigned int arrLen;
 	uint8_t* arrRGB = nullptr;
 	uint8_t* encoded = nullptr;
-	FCapturedFrameData* frame = nullptr;
-	explicit FrameProcessData(
+	TSharedPtr<FCapturedFrameData*> frame = nullptr;
+	FrameProcessData() {}
+	FrameProcessData(
 		uint64_t id, bool r, uint16_t w, uint16_t h,
 		UINT len, uint8_t* arr, uint8_t* en
 	) : f_id(id), isReady(r), arrLen(len), arrRGB(arr), encoded(en) {

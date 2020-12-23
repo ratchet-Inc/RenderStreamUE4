@@ -82,6 +82,7 @@ void AStreamActor::CaptureFrame(void)
 	UE_LOG(LogTemp, Warning, TEXT("Captured frames: %d."), l);
 	if (l > 0) {
 		FCapturedFrameData &frame = frames[l - 1];
+		FrameProcessData* p = new(std::nothrow) FrameProcessData();
 		FrameProcessData d(this->frameCounter, false, 0, 0, 0, nullptr, nullptr);
 		if (this->FrameMap == nullptr || this->frameQueue == nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("*Frame Queue or Frame Map is null."));
@@ -89,11 +90,14 @@ void AStreamActor::CaptureFrame(void)
 		}
 		d.width = frame.BufferSize.X;
 		d.height = frame.BufferSize.Y;
-		d.frame = &frame;
-		this->FrameMap->Add(this->frameCounter, &d);
+		p->height = d.height;
+		p->width = d.width;
+		d.frame = MakeShared<FCapturedFrameData*>(&frame);
+		TSharedPtr<FrameProcessData*> ptr = MakeShared<FrameProcessData*>(&d);
+		this->FrameMap->Add(this->frameCounter, p);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
-		UE_LOG(LogTemp, Warning, TEXT("Frame saved."));
+		UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), d.width*d.height);
 	}
 }
 
@@ -139,7 +143,7 @@ void AStreamActor::SendFrame(void)
 		this->curSendCount = min;
 		return;
 	}
-	FrameProcessData* d = *this->FrameMap->Find(this->curSendCount);
+	/*FrameProcessData* d = *this->FrameMap->Find(this->curSendCount);
 	if (!d->isReady) {
 		UE_LOG(LogTemp, Warning, TEXT("frame not ready."));
 		return;
@@ -158,7 +162,7 @@ void AStreamActor::SendFrame(void)
 	UE_LOG(LogTemp, Warning, TEXT("bytes read: %d."), sent);
 	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *FString(recv));
 	this->FrameMap->Remove(this->curSendCount);
-	this->curSendCount++;
+	this->curSendCount++;*/
 }
 
 /*
