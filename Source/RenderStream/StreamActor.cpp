@@ -48,7 +48,7 @@ void AStreamActor::Tick(float DeltaTime)
 	bool ready = ((ARenderStreamGameModeBase*)this->gameMode)->GetInitState();
 	if (ready && this->captureObj != nullptr) {
 		UE_LOG(LogTemp, Warning, TEXT("Capture"));
-		//this->CaptureFrame();
+		this->CaptureFrame();
 	}
 }
 
@@ -93,6 +93,7 @@ void AStreamActor::CaptureFrame(void)
 		this->FrameMap->Add(this->frameCounter, &d);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
+		UE_LOG(LogTemp, Warning, TEXT("Frame saved."));
 	}
 }
 
@@ -108,18 +109,16 @@ void AStreamActor::BeginDestroy(void)
 	Super::BeginDestroy();
 }
 
-uint64_t AStreamActor::FetchQueueData(FrameProcessData* memory)
+FrameProcessData* AStreamActor::FetchQueueData(uint64_t &frame_id)
 {
 	if (this->frameQueue != nullptr && !this->frameQueue->IsEmpty()) {
-		unsigned long long val = 0;
-		bool res = this->frameQueue->Dequeue(val);
+		bool res = this->frameQueue->Dequeue(frame_id);
 		if (res == false) {
-			return 0;
+			return nullptr;
 		}
-		memory = *(this->FrameMap->Find(val));
-		return val;
+		return *this->FrameMap->Find(frame_id);
 	}
-	return 0;
+	return nullptr;
 }
 
 void AStreamActor::SendFrame(void)

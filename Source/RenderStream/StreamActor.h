@@ -48,14 +48,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetFrameGrabber(FFrameGrabber* pointer);
-	virtual uint64_t FetchQueueData(FrameProcessData* memory);
+	virtual FrameProcessData* FetchQueueData(uint64_t &frame_id);
 	virtual AGameModeBase* GetGameMode(void) { return this->gameMode;  }
 private:
 	TMap<uint64_t, FrameProcessData*>* FrameMap = nullptr;
 	TQueue<uint64_t>* frameQueue = nullptr;
 	AGameModeBase* gameMode = nullptr;
 	FFrameGrabber* captureObj = nullptr;
-	uint64_t frameCounter = 0;
+	uint64_t frameCounter = 1;
 	uint64_t curSendCount = 0;
 	TSharedPtr<FInternetAddr> sharedRefAddr;
 	FSocket* socket = nullptr;
