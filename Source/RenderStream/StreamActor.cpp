@@ -45,10 +45,14 @@ void AStreamActor::BeginPlay()
 void AStreamActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	this->interval += DeltaTime;
+	//UE_LOG(LogTemp, Warning, TEXT("detla time: %f."), interval);
 	bool ready = ((ARenderStreamGameModeBase*)this->gameMode)->GetInitState();
 	if (ready && this->captureObj != nullptr) {
-		//UE_LOG(LogTemp, Warning, TEXT("Capture"));
-		this->CaptureFrame();
+		if (this->interval >= 0.042f) {
+			this->CaptureFrame();
+			this->interval = 0.0f;
+		}
 		this->SendFrame();
 	}
 }
