@@ -46,6 +46,10 @@ uint8_t* ARenderStreamGameModeBase::ConvertFrame(TArray<FColor>& arr, unsigned i
 	UINT index = 0;
 	len = arr.Num() * 3;
 	unsigned char* memBuffer = new(std::nothrow) unsigned char[len];
+	if (memBuffer == nullptr) {
+		UE_LOG(LogTemp, Error, TEXT("frame conversion buffer is null."));
+		return nullptr;
+	}
 	for (int i = 0; i < arr.Num(); ++i) {
 		memBuffer[index + 0] = arr[i].R;
 		memBuffer[index + 1] = arr[i].G;
