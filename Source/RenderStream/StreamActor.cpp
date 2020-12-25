@@ -83,21 +83,22 @@ void AStreamActor::CaptureFrame(void)
 	if (l > 0) {
 		FCapturedFrameData &frame = frames[l - 1];
 		FrameProcessData* p = new(std::nothrow) FrameProcessData();
-		FrameProcessData d(this->frameCounter, false, 0, 0, 0, nullptr, nullptr);
+		/*FrameProcessData d(this->frameCounter, false, 0, 0, 0, nullptr, nullptr);
 		if (this->FrameMap == nullptr || this->frameQueue == nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("*Frame Queue or Frame Map is null."));
 			return;
 		}
 		d.width = frame.BufferSize.X;
 		d.height = frame.BufferSize.Y;
-		p->height = d.height;
-		p->width = d.width;
-		d.frame = MakeShared<FCapturedFrameData*>(&frame);
-		TSharedPtr<FrameProcessData*> ptr = MakeShared<FrameProcessData*>(&d);
+		d.frame = MakeShared<FCapturedFrameData*>(&frame);*/
+		p->height = frame.BufferSize.Y;
+		p->width = frame.BufferSize.X;
+		p->frame = MakeShared<FCapturedFrameData*>(&frame);
+		//TSharedPtr<FrameProcessData*> ptr = MakeShared<FrameProcessData*>(&d);
 		this->FrameMap->Add(this->frameCounter, p);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
-		UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), d.width*d.height);
+		UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), p->width*p->height);
 	}
 }
 
