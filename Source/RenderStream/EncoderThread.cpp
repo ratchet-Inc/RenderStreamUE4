@@ -67,7 +67,8 @@ uint32 EncoderThread::Run(void)
 				gm->ThreadOutPut(s);
 			}
 			ptr->encoded = this->encoder->GetEncoded(ptr->arrLen);
-			UE_LOG(LogTemp, Error, TEXT("frame encoded."));
+			ptr->encoder = this->encoder;
+			UE_LOG(LogTemp, Error, TEXT("frame encoded[%d]."), frameID);
 		}
 		FPlatformProcess::Sleep(0.03f);
 	}

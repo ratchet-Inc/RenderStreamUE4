@@ -10,6 +10,8 @@
 #include "Sockets.h"
 #include "StreamActor.generated.h"
 
+class TooJPEG_Controller;
+
 struct FrameProcessData {
 	uint64_t f_id;
 	bool isReady;
@@ -19,13 +21,25 @@ struct FrameProcessData {
 	uint8_t* arrRGB = nullptr;
 	uint8_t* encoded = nullptr;
 	TSharedPtr<FCapturedFrameData*> frame = nullptr;
-	FrameProcessData() {}
+	TooJPEG_Controller* encoder = nullptr;
+	FrameProcessData() {
+		f_id = 0;
+		isReady = false;
+		width = 0;
+		height = 0;
+		arrLen = 0;
+		arrRGB = nullptr;
+		encoded = nullptr;
+		frame = nullptr;
+		encoder = nullptr;
+	}
 	FrameProcessData(
 		uint64_t id, bool r, uint16_t w, uint16_t h,
-		UINT len, uint8_t* arr, uint8_t* en
+		UINT len, uint8_t* arr, uint8_t* en, TSharedPtr<FCapturedFrameData*> fm
 	) : f_id(id), isReady(r), arrLen(len), arrRGB(arr), encoded(en) {
 		width = w;
 		height = h;
+		fm = frame;
 	}
 };
 

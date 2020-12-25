@@ -47,8 +47,9 @@ void AStreamActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	bool ready = ((ARenderStreamGameModeBase*)this->gameMode)->GetInitState();
 	if (ready && this->captureObj != nullptr) {
-		UE_LOG(LogTemp, Warning, TEXT("Capture"));
+		//UE_LOG(LogTemp, Warning, TEXT("Capture"));
 		this->CaptureFrame();
+		this->SendFrame();
 	}
 }
 
@@ -94,6 +95,8 @@ void AStreamActor::CaptureFrame(void)
 		p->height = frame.BufferSize.Y;
 		p->width = frame.BufferSize.X;
 		p->frame = MakeShared<FCapturedFrameData*>(&frame);
+		p->encoder = nullptr;
+		p->isReady = false;
 		//TSharedPtr<FrameProcessData*> ptr = MakeShared<FrameProcessData*>(&d);
 		this->FrameMap->Add(this->frameCounter, p);
 		this->frameQueue->Enqueue(this->frameCounter);
@@ -121,6 +124,9 @@ FrameProcessData* AStreamActor::FetchQueueData(uint64_t &frame_id)
 		if (res == false) {
 			return nullptr;
 		}
+		if (!this->FrameMap->Contains(frame_id)) {
+			return nullptr;
+		}
 		return *this->FrameMap->Find(frame_id);
 	}
 	return nullptr;
@@ -144,13 +150,14 @@ void AStreamActor::SendFrame(void)
 		this->curSendCount = min;
 		return;
 	}
-	/*FrameProcessData* d = *this->FrameMap->Find(this->curSendCount);
-	if (!d->isReady) {
+	FrameProcessData* d = *this->FrameMap->Find(this->curSendCount);
+	UE_LOG(LogTemp, Warning, L"is ready value: %d", d->isReady);
+	if (d == nullptr || !d->isReady) {
 		UE_LOG(LogTemp, Warning, TEXT("frame not ready."));
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d."), this->curSendCount);
-	int sent = 0, buffSize = d->arrLen;
+	/*int sent = 0, buffSize = d->arrLen;
 	//this->sock->Send((uint8*)vals, buffSize, sent);
 	UE_LOG(LogTemp, Warning, TEXT("bytes sent: %d."), sent);
 	TCHAR recv[1024];
@@ -161,9 +168,15 @@ void AStreamActor::SendFrame(void)
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("bytes read: %d."), sent);
-	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *FString(recv));
+	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *FString(recv));*/
+	if (d->encoder == nullptr) {
+		UE_LOG(LogTemp, Error, TEXT("bad encoder"));
+		return;
+	}
+	d->encoder->EmptyMemoryStore();
 	this->FrameMap->Remove(this->curSendCount);
-	this->curSendCount++;*/
+	delete d;
+	this->curSendCount++;
 }
 
 /*

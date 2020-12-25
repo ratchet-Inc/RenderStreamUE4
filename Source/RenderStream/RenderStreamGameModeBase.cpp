@@ -37,7 +37,7 @@ void ARenderStreamGameModeBase::BeginPlay(void)
 bool ARenderStreamGameModeBase::GetInitState(void)
 {
 	bool val = this->startInit;
-	this->startInit = false;
+	//this->startInit = false;
 	return val;
 }
 
