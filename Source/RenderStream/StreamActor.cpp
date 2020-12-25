@@ -98,7 +98,7 @@ void AStreamActor::CaptureFrame(void)
 		this->FrameMap->Add(this->frameCounter, p);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
-		UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), p->width*p->height);
+		//UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), p->width*p->height);
 	}
 }
 
