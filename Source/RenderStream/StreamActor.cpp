@@ -60,7 +60,7 @@ void AStreamActor::Tick(float DeltaTime)
 void AStreamActor::ConnectToServer(void)
 {
 	bool reval = false;
-	this->sharedRefAddr.Get()->SetIp(L"192.168.100.64", reval);
+	this->sharedRefAddr.Get()->SetIp(L"127.0.0.1", reval);
 	if (!reval)
 	{
 		UE_LOG(LogTemp, Warning, L"*Failed to evaluate the IP address.");
@@ -139,6 +139,9 @@ FrameProcessData* AStreamActor::FetchQueueData(uint64_t &frame_id)
 void AStreamActor::SendFrame(void)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Send frame called."));
+	if (!this->IsConnected) {
+		this->ConnectToServer();
+	}
 	bool reval = this->FrameMap->Contains(this->curSendCount);
 	if (!reval) {
 		UE_LOG(LogTemp, Warning, TEXT("Peek return: %d."), reval);
@@ -161,18 +164,18 @@ void AStreamActor::SendFrame(void)
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d."), this->curSendCount);
-	/*int sent = 0, buffSize = d->arrLen;
-	//this->sock->Send((uint8*)vals, buffSize, sent);
+	int sent = 0, buffSize = d->arrLen;
+	this->socket->Send(d->encoded, buffSize, sent);
 	UE_LOG(LogTemp, Warning, TEXT("bytes sent: %d."), sent);
 	TCHAR recv[1024];
-	//reval = this->sock->Recv((uint8*)recv, 1024, sent);
+	reval = this->socket->Recv((uint8*)recv, 1024, sent);
 	if (!reval) {
 		UE_LOG(LogTemp, Warning, TEXT("Socket failed."));
 		this->IsConnected = false;
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("bytes read: %d."), sent);
-	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *FString(recv));*/
+	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *FString(recv));
 	if (d->encoder == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("bad encoder"));
 		return;
