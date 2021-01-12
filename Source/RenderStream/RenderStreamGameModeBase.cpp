@@ -9,7 +9,6 @@
 #include "StreamActor.h"
 #include "GameModeActor.h"
 #include "FrameGrabber.h"
-//#include "toojpeg.cpp"
 #if WITH_EDITOR
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
@@ -64,16 +63,27 @@ void ARenderStreamGameModeBase::InitStream(void)
 #ifdef UE_BUILD_DEBUG
 	UE_LOG(LogTemp, Warning, TEXT("Manually starting stream."));
 #endif
+	int res = this->InitStream_Main();
+	UE_LOG(LogTemp, Warning, L"init returned: %d", res);
+
+	return;
+}
+
+int ARenderStreamGameModeBase::InitStream_Main(void)
+{
 	//this->startInit = true;
 	this->InitFrameGrabber();
+	if (this->capturePtr == nullptr) {
+		return 1;
+	}
 	if (this->streamActorPtr == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("*Failed to spawn stream actor."));
-		return;
+		return 1;
 	}
 	this->DetermineThreads();
 	((AStreamActor*)this->streamActorPtr)->SetFrameGrabber(this->capturePtr);
 
-	return;
+	return 0;
 }
 
 void ARenderStreamGameModeBase::InitFrameGrabber(void)
@@ -101,12 +111,20 @@ void ARenderStreamGameModeBase::InitFrameGrabber(void)
 #else
 		{
 			UGameEngine* en = Cast<UGameEngine>(GEngine);
-			this->scene_viewport = en->SceneViewport;
+			sceneVP = en->SceneViewport;
 		}
 #endif
 		// cannot save viewport in class instance, UE will assert on exit.
 		// need to find a way to void the refernce pointer or decrease count.
 		//this->scene_viewport = MakeShared<FSceneViewport>(sceneVP);
+		if (!sceneVP.IsValid()) {
+			UE_LOG(LogTemp, Error, L"bad scene viewport!");
+			return;
+		}
+		if (sceneVP.Get()->GetSize().X == 0 || sceneVP.Get()->GetSize().Y == 0) {
+			UE_LOG(LogTemp, Error, L"viewport not ready!");
+			return;
+		}
 		this->capturePtr = new(std::nothrow) FFrameGrabber(sceneVP.ToSharedRef(), sceneVP.Get()->GetSize());
 		if (this->capturePtr == nullptr) {
 			UE_LOG(LogTemp, Error, TEXT("*Failed to create screen capture object."));

@@ -163,7 +163,7 @@ void AStreamActor::SendFrame(void)
 		UE_LOG(LogTemp, Warning, TEXT("frame not ready."));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d."), this->curSendCount);
+	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d | frame size: %d."), this->curSendCount, d->arrLen);
 	int sent = 0, buffSize = d->arrLen;
 	this->socket->Send(d->encoded, buffSize, sent);
 	UE_LOG(LogTemp, Warning, TEXT("bytes sent: %d."), sent);

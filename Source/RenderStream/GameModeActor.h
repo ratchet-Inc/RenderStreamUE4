@@ -28,4 +28,5 @@ private:
 	AGameModeBase* ptr = nullptr;
 	bool isDone = false;
 	int state = 0;
+	float waitTimer = 0.0f;
 };

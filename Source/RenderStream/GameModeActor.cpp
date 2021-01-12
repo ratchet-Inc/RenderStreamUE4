@@ -31,15 +31,25 @@ void AGameModeActor::BeginDestroy(void)
 void AGameModeActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	this->waitTimer += DeltaTime;
+	if (this->waitTimer < 1.0f) {
+		return;
+	}
 	int res = 1;
 	if (!isDone && ptr != nullptr) {
 		switch (state) {
 		case 0:
-			((ARenderStreamGameModeBase*)ptr)->InitStream();
-			state = 1;
+			res = ((ARenderStreamGameModeBase*)ptr)->InitStream_Main();
+			// trying to equate to 1, if the returned values = 0
+			// its successful, but we are adding 1 to avoid an else statement
+			res++;
+			if (res != 1) {
+				res = 0;
+			}
+			state = res;
+			res = 1;
 			break;
 		case 1:
-			UE_LOG(LogTemp, Warning, TEXT("ticking."));
 			res = ((ARenderStreamGameModeBase*)ptr)->DetermineThreads();
 			if (res == -1) {
 				isDone = true;
