@@ -20,7 +20,7 @@ struct FrameProcessData {
 	unsigned int arrLen;
 	uint8_t* arrRGB = nullptr;
 	uint8_t* encoded = nullptr;
-	TSharedPtr<FCapturedFrameData*> frame = nullptr;
+	TSharedPtr<FCapturedFrameData*, ESPMode::ThreadSafe> frame = nullptr;
 	TooJPEG_Controller* encoder = nullptr;
 	FrameProcessData() {
 		f_id = 0;
@@ -35,7 +35,7 @@ struct FrameProcessData {
 	}
 	FrameProcessData(
 		uint64_t id, bool r, uint16_t w, uint16_t h,
-		UINT len, uint8_t* arr, uint8_t* en, TSharedPtr<FCapturedFrameData*> fm
+		UINT len, uint8_t* arr, uint8_t* en, TSharedPtr<FCapturedFrameData*, ESPMode::ThreadSafe> fm
 	) : f_id(id), isReady(r), arrLen(len), arrRGB(arr), encoded(en) {
 		width = w;
 		height = h;

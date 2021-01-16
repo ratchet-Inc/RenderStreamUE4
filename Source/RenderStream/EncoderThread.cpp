@@ -57,8 +57,10 @@ uint32 EncoderThread::Run(void)
 				UE_LOG(LogTemp, Error, L"frame is null.");
 				continue;
 			}
-			//UE_LOG(LogTemp, Error, L"frame is null %d.", (*ptr->frame.Get())->BufferSize.Y * (*ptr->frame.Get())->BufferSize.X);
-			ptr->arrRGB = gm->ConvertFrame((*ptr->frame.Get())->ColorBuffer, ptr->arrLen);
+			//ptr->arrRGB = gm->ConvertFrame(*(*ptr->frame.Get()), ptr->arrLen);
+			UE_LOG(LogTemp, Warning, TEXT("reference count[1]: %d."), ptr->frame.GetSharedReferenceCount());
+			//UE_LOG(LogTemp, Error, L"frame length: %d|%d.", (*ptr->frame.Get())->BufferSize.Y * (*ptr->frame.Get())->BufferSize.X, ptr->arrLen);
+			UE_LOG(LogTemp, Warning, TEXT("memory colours: %d|%d|%d."), ptr->arrRGB[ptr->arrLen - 3], ptr->arrRGB[ptr->arrLen - 2], ptr->arrRGB[ptr->arrLen - 1]);
 			bool res = this->encoder->EncodeImage(ptr->arrRGB, ptr->width, ptr->height, true, ARenderStreamGameModeBase::COMP_QUALITY);
 			ptr->isReady = res;
 			if (!res) {

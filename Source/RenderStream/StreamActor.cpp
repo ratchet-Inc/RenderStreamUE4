@@ -8,6 +8,7 @@
 #include "Containers/Queue.h"
 #include "SocketSubsystem.h"
 #include <fstream>
+#include <sstream>
 
 // Sets default values
 AStreamActor::AStreamActor()
@@ -67,7 +68,8 @@ void AStreamActor::ConnectToServer(void)
 		return;
 	}
 	this->sharedRefAddr.Get()->SetPort(8000);
-	reval = this->socket->Connect(*this->sharedRefAddr);
+	//reval = this->socket->Connect(*this->sharedRefAddr);
+	reval = true;
 	if (reval) {
 		this->IsConnected = true;
 	}
@@ -98,13 +100,20 @@ void AStreamActor::CaptureFrame(void)
 		d.frame = MakeShared<FCapturedFrameData*>(&frame);*/
 		p->height = frame.BufferSize.Y;
 		p->width = frame.BufferSize.X;
-		p->frame = MakeShared<FCapturedFrameData*>(&frame);
+		p->frame = MakeShared<FCapturedFrameData*, ESPMode::ThreadSafe>(&frame);
+		UE_LOG(LogTemp, Warning, TEXT("reference count[0]: %d."), p->frame.GetSharedReferenceCount());
 		p->encoder = nullptr;
 		p->isReady = false;
 		//TSharedPtr<FrameProcessData*> ptr = MakeShared<FrameProcessData*>(&d);
+		p->arrRGB = ((ARenderStreamGameModeBase*)gameMode)->ConvertFrame(frame.ColorBuffer, p->arrLen);
 		this->FrameMap->Add(this->frameCounter, p);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
+		UE_LOG(LogTemp, Warning, TEXT("memory colours: %d|%d|%d."), frame.ColorBuffer.Last().R, frame.ColorBuffer.Last().G, frame.ColorBuffer.Last().B);
+		UE_LOG(LogTemp, Warning, TEXT("memory colours: %d|%d|%d."), p->arrRGB[p->arrLen - 3], p->arrRGB[p->arrLen - 2], p->arrRGB[p->arrLen - 1]);
+		/*int x = 0;
+		char* ptr = this->ParseFrameFAST(&frame, x, 1);
+		delete[] ptr;*/
 		//UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), p->width*p->height);
 	}
 }
@@ -165,7 +174,15 @@ void AStreamActor::SendFrame(void)
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d | frame size: %d."), this->curSendCount, d->arrLen);
 	int sent = 0, buffSize = d->arrLen;
-	this->socket->Send(d->encoded, buffSize, sent);
+	std::string stemp;
+	std::stringstream ss;
+	ss << this->curSendCount;
+	ss >> stemp;
+	std::string fname("C:/UE4_Dumps/rendered["+stemp+"].jpg");
+	std::fstream f(fname.c_str(), std::ios::binary | std::ios::out);
+	f.write((char*)d->encoded, buffSize);
+	f.close();
+	/*this->socket->Send(d->encoded, buffSize, sent);
 	UE_LOG(LogTemp, Warning, TEXT("bytes sent: %d."), sent);
 	TCHAR recv[1024];
 	reval = this->socket->Recv((uint8*)recv, 1024, sent);
@@ -175,12 +192,19 @@ void AStreamActor::SendFrame(void)
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("bytes read: %d."), sent);
-	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *FString(recv));
+	FString s(recv);
+	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *s);
 	if (d->encoder == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("bad encoder"));
 		return;
-	}
+	}*/
+	UINT val;
+	d->encoder->GetEncoded(val);
+	UE_LOG(LogTemp, Warning, TEXT("memory store length: %d."), val);
 	d->encoder->EmptyMemoryStore();
+	UE_LOG(LogTemp, Warning, TEXT("Memory stored emptied."));
+	d->encoder->GetEncoded(val);
+	UE_LOG(LogTemp, Warning, TEXT("memory store length: %d."), val);
 	this->FrameMap->Remove(this->curSendCount);
 	delete d;
 	this->curSendCount++;
