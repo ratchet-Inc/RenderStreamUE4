@@ -53,14 +53,10 @@ uint32 EncoderThread::Run(void)
 				continue;
 			}
 			//UE_LOG(LogTemp, Warning, L"encoding...");
-			if (ptr->frame == nullptr) {
+			if (ptr->arrRGB == nullptr || ptr->arrLen == 0) {
 				UE_LOG(LogTemp, Error, L"frame is null.");
 				continue;
 			}
-			//ptr->arrRGB = gm->ConvertFrame(*(*ptr->frame.Get()), ptr->arrLen);
-			UE_LOG(LogTemp, Warning, TEXT("reference count[1]: %d."), ptr->frame.GetSharedReferenceCount());
-			//UE_LOG(LogTemp, Error, L"frame length: %d|%d.", (*ptr->frame.Get())->BufferSize.Y * (*ptr->frame.Get())->BufferSize.X, ptr->arrLen);
-			UE_LOG(LogTemp, Warning, TEXT("memory colours: %d|%d|%d."), ptr->arrRGB[ptr->arrLen - 3], ptr->arrRGB[ptr->arrLen - 2], ptr->arrRGB[ptr->arrLen - 1]);
 			bool res = this->encoder->EncodeImage(ptr->arrRGB, ptr->width, ptr->height, true, ARenderStreamGameModeBase::COMP_QUALITY);
 			ptr->isReady = res;
 			if (!res) {
@@ -70,7 +66,9 @@ uint32 EncoderThread::Run(void)
 			}
 			ptr->encoded = this->encoder->GetEncoded(ptr->arrLen);
 			ptr->encoder = this->encoder;
+#ifdef UE_BUILD_DEBUG
 			UE_LOG(LogTemp, Error, TEXT("frame encoded[%d]."), frameID);
+#endif
 		}
 		FPlatformProcess::Sleep(0.03f);
 	}

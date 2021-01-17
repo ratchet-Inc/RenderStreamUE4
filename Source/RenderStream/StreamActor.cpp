@@ -39,6 +39,7 @@ void AStreamActor::BeginPlay()
 	this->gameMode = UGameplayStatics::GetGameMode(GetWorld());
 #ifdef UE_BUILD_DEBUG
 	UE_LOG(LogTemp, Warning, TEXT("Stream Actor spawned."));
+	UE_LOG(LogTemp, Warning, TEXT("IP Address: %s."), *this->IPwide);
 #endif
 }
 
@@ -61,7 +62,7 @@ void AStreamActor::Tick(float DeltaTime)
 void AStreamActor::ConnectToServer(void)
 {
 	bool reval = false;
-	this->sharedRefAddr.Get()->SetIp(L"127.0.0.1", reval);
+	this->sharedRefAddr.Get()->SetIp(*this->IPwide, reval);
 	if (!reval)
 	{
 		UE_LOG(LogTemp, Warning, L"*Failed to evaluate the IP address.");
@@ -86,35 +87,26 @@ void AStreamActor::CaptureFrame(void)
 	this->captureObj->CaptureThisFrame(pl);
 	TArray<FCapturedFrameData> frames = this->captureObj->GetCapturedFrames();
 	UINT l = frames.Num();
+#ifdef UE_BUILD_DEBUG
 	UE_LOG(LogTemp, Warning, TEXT("Captured frames: %d."), l);
+#endif
 	if (l > 0) {
 		FCapturedFrameData &frame = frames[l - 1];
 		FrameProcessData* p = new(std::nothrow) FrameProcessData();
-		/*FrameProcessData d(this->frameCounter, false, 0, 0, 0, nullptr, nullptr);
-		if (this->FrameMap == nullptr || this->frameQueue == nullptr) {
-			UE_LOG(LogTemp, Warning, TEXT("*Frame Queue or Frame Map is null."));
-			return;
-		}
-		d.width = frame.BufferSize.X;
-		d.height = frame.BufferSize.Y;
-		d.frame = MakeShared<FCapturedFrameData*>(&frame);*/
 		p->height = frame.BufferSize.Y;
 		p->width = frame.BufferSize.X;
-		p->frame = MakeShared<FCapturedFrameData*, ESPMode::ThreadSafe>(&frame);
-		UE_LOG(LogTemp, Warning, TEXT("reference count[0]: %d."), p->frame.GetSharedReferenceCount());
+		//p->frame = MakeShared<FCapturedFrameData*, ESPMode::ThreadSafe>(&frame);
 		p->encoder = nullptr;
 		p->isReady = false;
-		//TSharedPtr<FrameProcessData*> ptr = MakeShared<FrameProcessData*>(&d);
+		p->arrLen = 0;
 		p->arrRGB = ((ARenderStreamGameModeBase*)gameMode)->ConvertFrame(frame.ColorBuffer, p->arrLen);
 		this->FrameMap->Add(this->frameCounter, p);
 		this->frameQueue->Enqueue(this->frameCounter);
 		this->frameCounter++;
+#ifdef UE_BUILD_DEBUG
 		UE_LOG(LogTemp, Warning, TEXT("memory colours: %d|%d|%d."), frame.ColorBuffer.Last().R, frame.ColorBuffer.Last().G, frame.ColorBuffer.Last().B);
 		UE_LOG(LogTemp, Warning, TEXT("memory colours: %d|%d|%d."), p->arrRGB[p->arrLen - 3], p->arrRGB[p->arrLen - 2], p->arrRGB[p->arrLen - 1]);
-		/*int x = 0;
-		char* ptr = this->ParseFrameFAST(&frame, x, 1);
-		delete[] ptr;*/
-		//UE_LOG(LogTemp, Warning, TEXT("Frame saved: %d."), p->width*p->height);
+#endif
 	}
 }
 

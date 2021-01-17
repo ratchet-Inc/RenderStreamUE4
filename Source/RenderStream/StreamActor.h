@@ -43,7 +43,7 @@ struct FrameProcessData {
 	}
 };
 
-UCLASS()
+UCLASS(Config = Game)
 class RENDERSTREAM_API AStreamActor : public AActor
 {
 	GENERATED_BODY()
@@ -66,6 +66,8 @@ public:
 	virtual FrameProcessData* FetchQueueData(uint64_t &frame_id);
 	virtual AGameModeBase* GetGameMode(void) { return this->gameMode;  }
 private:
+	UPROPERTY(Config)
+		FString IPwide;
 	double interval = 0.0f;
 	TMap<uint64_t, FrameProcessData*>* FrameMap = nullptr;
 	TQueue<uint64_t>* frameQueue = nullptr;
