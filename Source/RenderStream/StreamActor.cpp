@@ -166,15 +166,17 @@ void AStreamActor::SendFrame(void)
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d | frame size: %d."), this->curSendCount, d->arrLen);
 	int sent = 0, buffSize = d->arrLen;
+#ifdef UE_BUILD_DEBUG
 	std::string stemp;
 	std::stringstream ss;
 	ss << this->curSendCount;
 	ss >> stemp;
-	std::string fname("C:/UE4_Dumps/rendered["+stemp+"].jpg");
+	std::string fname("C:/UE4_Dumps/frames/rendered["+stemp+"].jpg");
 	std::fstream f(fname.c_str(), std::ios::binary | std::ios::out);
 	f.write((char*)d->encoded, buffSize);
 	f.close();
-	/*this->socket->Send(d->encoded, buffSize, sent);
+#endif
+	this->socket->Send(d->encoded, buffSize, sent);
 	UE_LOG(LogTemp, Warning, TEXT("bytes sent: %d."), sent);
 	TCHAR recv[1024];
 	reval = this->socket->Recv((uint8*)recv, 1024, sent);
@@ -189,14 +191,8 @@ void AStreamActor::SendFrame(void)
 	if (d->encoder == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("bad encoder"));
 		return;
-	}*/
-	UINT val;
-	d->encoder->GetEncoded(val);
-	UE_LOG(LogTemp, Warning, TEXT("memory store length: %d."), val);
+	}
 	d->encoder->EmptyMemoryStore();
-	UE_LOG(LogTemp, Warning, TEXT("Memory stored emptied."));
-	d->encoder->GetEncoded(val);
-	UE_LOG(LogTemp, Warning, TEXT("memory store length: %d."), val);
 	this->FrameMap->Remove(this->curSendCount);
 	delete d;
 	this->curSendCount++;
