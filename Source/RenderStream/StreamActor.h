@@ -10,6 +10,8 @@
 #include "Sockets.h"
 #include "StreamActor.generated.h"
 
+//#define DEBUG_FRAME_DUMP
+
 class TooJPEG_Controller;
 
 struct FrameProcessData {

@@ -159,14 +159,14 @@ void AStreamActor::SendFrame(void)
 		return;
 	}
 	FrameProcessData* d = *this->FrameMap->Find(this->curSendCount);
-	UE_LOG(LogTemp, Warning, L"is ready value: %d", d->isReady);
+	UE_LOG(LogTemp, Warning, L"frame[%d] is ready value: %d", this->curSendCount, d->isReady);
 	if (d == nullptr || !d->isReady) {
 		UE_LOG(LogTemp, Warning, TEXT("frame not ready."));
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d | frame size: %d."), this->curSendCount, d->arrLen);
 	int sent = 0, buffSize = d->arrLen;
-#ifdef UE_BUILD_DEBUG
+#if defined (UE_BUILD_DEBUG) && defined(DEBUG_FRAME_DUMP)
 	std::string stemp;
 	std::stringstream ss;
 	ss << this->curSendCount;
