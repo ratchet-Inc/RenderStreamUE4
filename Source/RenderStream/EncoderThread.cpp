@@ -30,7 +30,7 @@ bool EncoderThread::Init(void)
 uint32 EncoderThread::Run(void)
 {
 	float sleepTime = ((float)ARenderStreamGameModeBase::FPS_LIMIT) / 1000.0f;
-	UE_LOG(LogTemp, Warning, TEXT("thread ready, sleep time: %f."), sleepTime);
+	UE_LOG(LogTemp, Warning, TEXT("thread ready, thread sleep time: %f."), sleepTime);
 	while (true) {
 		if (this->forceStop) {
 			break;
@@ -49,7 +49,7 @@ uint32 EncoderThread::Run(void)
 			unsigned long long frameID = 0;
 			FrameProcessData* ptr = this->stream->FetchQueueData(frameID);
 			if (frameID == 0 || ptr == nullptr) {
-				FPlatformProcess::Sleep(0.03f);
+				FPlatformProcess::Sleep(sleepTime);
 				continue;
 			}
 			//UE_LOG(LogTemp, Warning, L"encoding...");
@@ -57,6 +57,7 @@ uint32 EncoderThread::Run(void)
 				UE_LOG(LogTemp, Error, L"frame is null.");
 				continue;
 			}
+			time_t start = clock();
 			bool res = this->encoder->EncodeImage(ptr->arrRGB, ptr->width, ptr->height, true, ARenderStreamGameModeBase::COMP_QUALITY);
 			ptr->isReady = res;
 			if (!res) {
@@ -66,11 +67,13 @@ uint32 EncoderThread::Run(void)
 			}
 			ptr->encoded = this->encoder->GetEncoded(ptr->arrLen);
 			ptr->encoder = this->encoder;
+			time_t stop = clock();
 #ifdef UE_BUILD_DEBUG
-			UE_LOG(LogTemp, Error, TEXT("frame encoded[%d]."), frameID);
+			double timeTaken = (double)(stop - start) / CLOCKS_PER_SEC;
+			UE_LOG(LogTemp, Error, TEXT("frame encoded[%d] in %.4f."), frameID, timeTaken);
 #endif
 		}
-		FPlatformProcess::Sleep(0.03f);
+		FPlatformProcess::Sleep(sleepTime);
 	}
 
 	return 0;
