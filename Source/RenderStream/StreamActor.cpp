@@ -177,6 +177,7 @@ void AStreamActor::SendFrame(void)
 	f.write((char*)d->encoded, buffSize);
 	f.close();
 #endif
+	//this->socket->Send(d->encoded, buffSize, sent);
 	uint8_t* newData = new(std::nothrow) uint8_t[d->arrLen + 1];
 	newData[d->arrLen] = '\0';
 	std::memcpy(newData, d->encoded, d->arrLen);
