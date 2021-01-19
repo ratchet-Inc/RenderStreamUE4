@@ -48,10 +48,9 @@ void AStreamActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	this->interval += DeltaTime;
-	//UE_LOG(LogTemp, Warning, TEXT("detla time: %f."), interval);
 	bool ready = ((ARenderStreamGameModeBase*)this->gameMode)->GetInitState();
 	if (ready && this->captureObj != nullptr) {
-		if (this->interval >= 0.042f) {
+		if (this->interval >= (ARenderStreamGameModeBase::F_TIME_MS / 1000.0f)) {
 			this->CaptureFrame();
 			this->interval = 0.0f;
 		}
@@ -69,7 +68,7 @@ void AStreamActor::ConnectToServer(void)
 		return;
 	}
 	this->sharedRefAddr.Get()->SetPort(8000);
-	//reval = this->socket->Connect(*this->sharedRefAddr);
+	reval = this->socket->Connect(*this->sharedRefAddr);
 	reval = true;
 	if (reval) {
 		this->IsConnected = true;
@@ -139,13 +138,13 @@ FrameProcessData* AStreamActor::FetchQueueData(uint64_t &frame_id)
 
 void AStreamActor::SendFrame(void)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Send frame called."));
+	//UE_LOG(LogTemp, Warning, TEXT("Send frame called."));
 	if (!this->IsConnected) {
 		this->ConnectToServer();
 	}
 	bool reval = this->FrameMap->Contains(this->curSendCount);
 	if (!reval) {
-		UE_LOG(LogTemp, Warning, TEXT("Peek return: %d."), reval);
+		//UE_LOG(LogTemp, Warning, TEXT("Peek return: %d."), reval);
 		TArray<uint64_t> keys;
 		this->FrameMap->GetKeys(keys);
 		uint64 min = -1;
@@ -159,12 +158,14 @@ void AStreamActor::SendFrame(void)
 		return;
 	}
 	FrameProcessData* d = *this->FrameMap->Find(this->curSendCount);
-	UE_LOG(LogTemp, Warning, L"frame[%d] is ready value: %d", this->curSendCount, d->isReady);
+	//UE_LOG(LogTemp, Warning, L"frame[%d] is ready value: %d", this->curSendCount, d->isReady);
 	if (d == nullptr || !d->isReady) {
-		UE_LOG(LogTemp, Warning, TEXT("frame not ready."));
+		//UE_LOG(LogTemp, Warning, TEXT("frame not ready."));
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d | frame size: %d."), this->curSendCount, d->arrLen);
+	//UE_LOG(LogTemp, Warning, TEXT("Sending frame: %d | frame size: %d bytes | frame queue: %d."), this->curSendCount, d->arrLen, this->frameCounter - this->curSendCount);
+	FString s = FString::Printf(TEXT("Sending frame: %d | frame size: %d bytes | frame queue: %d."), this->curSendCount, d->arrLen, this->frameCounter - this->curSendCount);
+	GEngine->AddOnScreenDebugMessage((uint64)-1, 0.042f*2.0f, FColor::Red, s);
 	int sent = 0, buffSize = d->arrLen;
 #if defined (UE_BUILD_DEBUG) && defined(DEBUG_FRAME_DUMP)
 	std::string stemp;
@@ -176,24 +177,29 @@ void AStreamActor::SendFrame(void)
 	f.write((char*)d->encoded, buffSize);
 	f.close();
 #endif
-	this->socket->Send(d->encoded, buffSize, sent);
+	uint8_t* newData = new(std::nothrow) uint8_t[d->arrLen + 1];
+	newData[d->arrLen] = '\0';
+	std::memcpy(newData, d->encoded, d->arrLen);
+	this->socket->Send(newData, buffSize+1, sent);
 	UE_LOG(LogTemp, Warning, TEXT("bytes sent: %d."), sent);
 	TCHAR recv[1024];
 	reval = this->socket->Recv((uint8*)recv, 1024, sent);
 	if (!reval) {
-		UE_LOG(LogTemp, Warning, TEXT("Socket failed."));
+		UE_LOG(LogTemp, Error, TEXT("Socket failed."));
 		this->IsConnected = false;
 		return;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("bytes read: %d."), sent);
-	FString s(recv);
-	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *s);
+	FString str(recv);
+	UE_LOG(LogTemp, Warning, TEXT("received: %s."), *str);
 	if (d->encoder == nullptr) {
 		UE_LOG(LogTemp, Error, TEXT("bad encoder"));
 		return;
 	}
+	delete[] newData;
 	d->encoder->EmptyMemoryStore();
 	this->FrameMap->Remove(this->curSendCount);
+	delete[] d->arrRGB;
 	delete d;
 	this->curSendCount++;
 }
