@@ -168,7 +168,7 @@ int ARenderStreamGameModeBase::DetermineThreads(void)
 	contr->EmptyMemoryStore();
 	delete contr;
 	double timeTaken = (double)(end - start) / CLOCKS_PER_SEC;
-	UE_LOG(LogTemp, Warning, TEXT("Estimated conversion time: %.6f."), timeTaken);
+	UE_LOG(LogTemp, Warning, TEXT("Estimated conversion time: %.4f | %d x %d."), timeTaken, frameWidth, frameHeight);
 	uint8_t coreCount = timeTaken / ARenderStreamGameModeBase::F_TIME_MS;
 	coreCount++;
 	this->threadLimit = coreCount;

@@ -30,6 +30,7 @@ bool EncoderThread::Init(void)
 uint32 EncoderThread::Run(void)
 {
 	float sleepTime = ((float)ARenderStreamGameModeBase::FPS_LIMIT) / 1000.0f;
+	sleepTime = sleepTime / 2.0f;
 	UE_LOG(LogTemp, Warning, TEXT("thread ready, thread sleep time: %f."), sleepTime);
 	while (true) {
 		if (this->forceStop) {
